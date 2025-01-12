@@ -1,5 +1,3 @@
-This is a simple console math game
+This is a console math game in which you can solve timed math puzzles. The total of 5 operations and 3 difficulty levels are available
 
-AI voice support and/or MAUI GUI functionality might be added later
-
-Learning outcomes of this project: basic C# syntax, async programming
+AI voice support and/or GUI functionality might be added later
