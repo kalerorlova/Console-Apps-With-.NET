@@ -16,21 +16,6 @@ while (gameOn) {
     printMenu();
     menuChoice = getMenuChoice();
     switch (menuChoice) {
-        case 1:
-            score = await createPuzzle(menuChoice, history, currDiff, score, randomMode);
-            break;
-        case 2:
-            score = await createPuzzle(menuChoice, history, currDiff, score, randomMode);
-            break;
-        case 3:
-            score = await createPuzzle(menuChoice, history, currDiff, score, randomMode);
-            break;
-        case 4:
-            score = await createPuzzle(menuChoice, history, currDiff, score, randomMode);
-            break;
-        case 5:
-            score = await createPuzzle(menuChoice, history, currDiff, score, randomMode);
-            break;
         case 6:
             randomMode = true;
             Console.WriteLine("You will be presented with 10 random questions. Good luck!");
@@ -52,6 +37,9 @@ while (gameOn) {
             Console.WriteLine($"Your total score is {score}!");
             Console.WriteLine($"The total of {history.Count} games played!");
             gameOn = false;
+            break;
+        default:
+            score = await createPuzzle(menuChoice, history, currDiff, score, randomMode);
             break;
     }
     if (menuChoice > 0 && menuChoice < 8){
