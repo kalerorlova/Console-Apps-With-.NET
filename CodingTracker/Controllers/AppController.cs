@@ -20,10 +20,13 @@ internal class AppController(CodingSessionController cdController) {
         bool appOn = true;
         Dictionary<string, Action> menu = new Dictionary<string, Action>();
         menu.Add("1. Record a new session", cdController.createSession);
-        menu.Add("2. Get all sessions info", cdController.readSessions);
-        menu.Add("3. Update the session info", cdController.updateSession);
-        menu.Add("4. Delete a session", cdController.deleteSession);
-        menu.Add("5. Exit", delegate() {
+        menu.Add("2. Record a new session using stopwatch", cdController.createTimedSession);
+        menu.Add("3. Get all sessions info", cdController.readSessions);
+        menu.Add("4. Update the session info", cdController.updateSession);
+        menu.Add("5. Delete a session", cdController.deleteSession);
+        menu.Add("6. Filter sessions by period", cdController.filterSessions);
+        menu.Add("7. Run statistics summary by period", cdController.runSummary);
+        menu.Add("6. Exit", delegate() {
             appOn = false;
         });
         AnsiConsole.WriteLine("Welcome to the Coding Tracker!");

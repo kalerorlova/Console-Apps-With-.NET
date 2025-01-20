@@ -5,14 +5,6 @@ using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using Dapper;
 using Microsoft.Data.Sqlite;
-/*
-internal interface ICodingSessionRepository : IDisposable {
-    internal Task createSession(DateTime startTime, DateTime endTime);
-    internal Task<List<CodingSession>?> getAllSessions();
-    internal Task updateSession(DateTime? startTime, DateTime? endTime, int? id);
-    internal Task deleteSession(int? id);
-}
-*/
 
 public class CodingSessionRepository : ICodingSessionRepository {
     public async Task createSession(string StartTime, string EndTime, string Duration) {
@@ -53,6 +45,21 @@ public class CodingSessionRepository : ICodingSessionRepository {
         }
     }
 
+    public async Task<List<CodingSession>> getSessionsByPeriod(string StartTime, string EndTime) {
+        using (var connection = new SqliteConnection(AppConfig.connectionString)) {
+            string sql = "SELECT * FROM Code_Sessions WHERE startTime >= @startDate AND endTime <= @endDate";
+            var sessions = (await connection.QueryAsync<CodingSession>(sql, new {startDate = StartTime, endDate = EndTime})).ToList();
+            return sessions;
+        }
+    }
+
+    public async Task<List<string>> runSummary(string startTime, string endTime) {
+        using (var connection = new SqliteConnection(AppConfig.connectionString)) {
+            string sql = "SELECT duration FROM Code_Sessions WHERE startTime >= @startDate AND endTime <= @endDate";
+            var sessions = (await connection.QueryAsync<string>(sql, new {startDate = startTime, endDate = endTime})).ToList();
+            return sessions;
+        }
+    }
 
 }
 

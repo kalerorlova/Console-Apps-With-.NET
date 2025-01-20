@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Diagnostics;
 using System.Globalization;
 using System.Linq;
 using System.Threading.Tasks;
@@ -12,8 +13,8 @@ internal class CodingSessionController(ICodingSessionRepository cdRepo) {
 
         internal async void createSession() {
                 Console.Clear();
-                DateTime startDate = Input.getDate("start");
-                DateTime endDate = Input.getDate("end", startDate);
+                DateTime startDate = Input.getDate("start", "session");
+                DateTime endDate = Input.getDate("end", "session", startDate);
                 TimeSpan duration = endDate - startDate;
                 if (duration.Days > 0) {
                         AnsiConsole.WriteLine("Not adding your session, cheater");
@@ -25,16 +26,58 @@ internal class CodingSessionController(ICodingSessionRepository cdRepo) {
                 AnsiConsole.WriteLine("Session created successfully!");              
         }
 
+        internal async void createTimedSession() {
+                Console.Clear();
+                DateTime startDate;
+                DateTime endDate;
+                TimeSpan duration;
+                var stopwatch = new Stopwatch();
+                bool stopwatchOn = true;
+                string menuChoice = "Resume";
+                var choice = AnsiConsole.Prompt(new SelectionPrompt<string>()
+                                        .Title("Ready to start the session? ")
+                                        .AddChoices("Return to the menu", "Start the session"));
+                if (choice == "Return to menu") {
+                        return;
+                }
+                startDate = DateTime.Now;
+                while (stopwatchOn && menuChoice != "Finish") {
+                        switch (menuChoice) {
+                                case "Resume":
+                                        stopwatch.Start();
+                                        stopwatchOn = true;
+                                        menuChoice = AnsiConsole.Prompt(new SelectionPrompt<string>()
+                                                .Title("Would you like to pause or finish the session? ")
+                                                .AddChoices("Pause", "Finish"));
+                                        break;
+                                case "Pause":
+                                        stopwatch.Stop();
+                                        stopwatchOn = true;
+                                        menuChoice = AnsiConsole.Prompt(new SelectionPrompt<string>()
+                                                .Title("Would you like to resume the session? ")
+                                                .AddChoices("Pause", "Resume"));
+                                        break;
+                                case "Finish":
+                                        stopwatch.Stop();
+                                        menuChoice = AnsiConsole.Prompt(new SelectionPrompt<string>()
+                                                .Title("Would you like to finish the session? ")
+                                                .AddChoices("Resume", "Finish"));
+                                        stopwatchOn = false;
+                                        break;          
+                        }
+                }
+                endDate = DateTime.Now;
+                duration = stopwatch.Elapsed;
+                await cdRepo.createSession(startDate.ToString(Input.dateFormat), endDate.ToString(Input.dateFormat)
+                        , duration.ToString(@"hh\:mm"));
+                Console.Clear();
+                AnsiConsole.WriteLine("Session created successfully!");
+        }
+
         internal async void readSessions() {
                 Console.Clear();
                 var sessions = await cdRepo.getAllSessions();
-                var table = new Table();
-                table.AddColumns("ID", "Start Time", "End Time", "Session duration (in hours)");
-                table.Centered();
-                foreach (var session in sessions) {
-                        table.AddRow(session.id.ToString(), session.startTime, session.endTime, session.duration);
-                }
-                AnsiConsole.Write(table);
+                Input.printTable(sessions);
         }
 
         internal async void updateSession() {
@@ -53,11 +96,11 @@ internal class CodingSessionController(ICodingSessionRepository cdRepo) {
                 DateTime updateEnd = initEnd;
                 bool confirmed = AnsiConsole.Prompt(new ConfirmationPrompt("Would you like to update the start date?"));
                 if (confirmed) {
-                        updateStart = Input.getDate("start");
+                        updateStart = Input.getDate("start", "session");
                 }
                 confirmed = AnsiConsole.Prompt(new ConfirmationPrompt("Would you like to update the end date?"));
                 if (confirmed) {
-                        updateStart = Input.getDate("end", updateStart);
+                        updateStart = Input.getDate("end", "session", updateStart);
                 }
                 TimeSpan duration = updateEnd - updateStart;
                 if (duration.Days != 0 ) {
@@ -80,5 +123,34 @@ internal class CodingSessionController(ICodingSessionRepository cdRepo) {
                 }
                 await cdRepo.deleteSession(id);
                 AnsiConsole.WriteLine("Session deleted successfully!");
+        }
+
+        internal async void filterSessions() {
+                Console.Clear();
+                DateTime startDate = Input.getDate("start", "period");
+                DateTime endDate = Input.getDate("start", "period");
+                var sessions = await cdRepo.getSessionsByPeriod(startDate.ToString(Input.dateFormat), endDate.ToString(Input.dateFormat));
+                Input.printTable(sessions);
+        }
+
+        internal async void runSummary() {
+                Console.Clear();
+                DateTime startDate = Input.getDate("start", "period");
+                DateTime endDate = Input.getDate("start", "period");
+                var times = await cdRepo.runSummary(startDate.ToString(Input.dateFormat), endDate.ToString(Input.dateFormat));
+                if (times.Count == 0) {
+                        AnsiConsole.WriteLine("No sessions entered yet!");
+                        return;
+                }
+                if (times.Count == 1) {
+                        AnsiConsole.WriteLine($"You have been coding for {times[0]} hours total during that period");
+                        return;
+                }
+                TimeSpan sum = new TimeSpan(0, 0, 0);
+                foreach (var time in times) {
+                        sum += TimeSpan.Parse(time);
+                }
+                AnsiConsole.WriteLine($"You have been coding for {sum.ToString(@"hh\:mm")} hrs:mins total during that period!");
+                return;
         }
 }
