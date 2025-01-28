@@ -1,0 +1,2 @@
+﻿AppConfig.Run();
+AppService.Run();
